@@ -113,12 +113,21 @@ class AppTheme {
       ),
 
       outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size.fromHeight(52),
-          foregroundColor: AppColors.onSurface,
-          side: const BorderSide(color: AppColors.outlineVariant),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.md),
+        style: ButtonStyle(
+          minimumSize: WidgetStatePropertyAll(const Size.fromHeight(52)),
+          backgroundColor: WidgetStatePropertyAll(
+            AppColors.surfaceContainerLowest,
+          ),
+          foregroundColor: WidgetStatePropertyAll(AppColors.onSurface),
+          elevation: const WidgetStatePropertyAll(2),
+          shadowColor: WidgetStatePropertyAll(
+            AppColors.onSurface.withValues(alpha: 0.05),
+          ),
+          side: const WidgetStatePropertyAll(BorderSide.none),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
           ),
         ),
       ),

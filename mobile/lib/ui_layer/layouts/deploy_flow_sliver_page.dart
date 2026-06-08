@@ -3,7 +3,7 @@ import 'package:mobile/ui_layer/theme/app_spacing.dart';
 import 'package:mobile/ui_layer/widgets/deploy_flow_logo_title.dart';
 
 class DeployFlowSliverPage extends StatelessWidget {
-  final String title;
+  final Widget? title;
   final Widget? leading;
   final List<Widget>? actions;
   final Widget? header;
@@ -13,7 +13,7 @@ class DeployFlowSliverPage extends StatelessWidget {
 
   const DeployFlowSliverPage({
     super.key,
-    required this.title,
+    this.title = const DeployFlowLogoTitle(),
     this.leading,
     this.actions,
     this.header,
@@ -35,7 +35,7 @@ class DeployFlowSliverPage extends StatelessWidget {
             shadowColor: Colors.transparent,
             elevation: 0,
             scrolledUnderElevation: 0,
-            title: const DeployFlowLogoTitle(),
+            title: title,
             leading: leading,
             actions: actions,
           ),

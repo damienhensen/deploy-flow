@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/ui_layer/layouts/deploy_flow_sliver_page.dart';
+import 'package:mobile/ui_layer/pages/project_details/project_details_page.dart';
 import 'package:mobile/ui_layer/pages/projects/widgets/project_card.dart';
 import 'package:mobile/ui_layer/theme/app_spacing.dart';
 import 'package:mobile/ui_layer/widgets/filter_status_chip.dart';
@@ -12,7 +13,6 @@ class ProjectsBody extends StatelessWidget {
     final selectedFilter = "All";
 
     return DeployFlowSliverPage(
-      title: "DeployFlow",
       actions: [
         IconButton(onPressed: () {}, icon: Icon(Icons.notifications_none)),
       ],
@@ -89,7 +89,16 @@ class ProjectsBody extends StatelessWidget {
           sliver: SliverList.separated(
             itemCount: 10,
             itemBuilder: (context, idx) {
-              return ProjectCard();
+              return ProjectCard(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ProjectDetailsPage(),
+                    ),
+                  );
+                },
+              );
             },
             separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
           ),

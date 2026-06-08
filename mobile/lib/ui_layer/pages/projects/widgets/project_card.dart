@@ -64,7 +64,10 @@ class ProjectCard extends StatelessWidget {
                       SizedBox(width: AppSpacing.sm),
                       Row(
                         children: [
-                          Icon(Icons.account_tree_outlined, size: AppSpacing.md),
+                          Icon(
+                            Icons.account_tree_outlined,
+                            size: AppSpacing.md,
+                          ),
                           SizedBox(width: AppSpacing.xs),
                           Text(
                             "main",
