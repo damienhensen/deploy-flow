@@ -15,6 +15,10 @@ class DomainStep extends StatelessWidget {
     final viewModel = context.watch<CreateProjectProvider>();
 
     return DeployFlowSliverPage(
+      title: Text(
+        "Create Project",
+        style: Theme.of(context).textTheme.headlineMedium,
+      ),
       actions: [
         IconButton(onPressed: () {}, icon: Icon(Icons.notifications_none)),
       ],

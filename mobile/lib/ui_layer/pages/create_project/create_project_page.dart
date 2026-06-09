@@ -60,7 +60,7 @@ class CreateProjectPage extends StatelessWidget {
                       Icon(Icons.rocket_launch),
                       SizedBox(width: AppSpacing.sm),
                     ],
-                    isLastStep ? Text("Next") : Text("Create Project"),
+                    isLastStep ? Text("Create Project") : Text("Next"),
                     if (!isLastStep) ...[
                       SizedBox(width: AppSpacing.sm),
                       Icon(Icons.arrow_forward),
