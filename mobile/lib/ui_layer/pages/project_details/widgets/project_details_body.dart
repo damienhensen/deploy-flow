@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/ui_layer/layouts/deploy_flow_sliver_page.dart';
-import 'package:mobile/ui_layer/pages/project_details/widgets/activity.dart';
+import 'package:mobile/ui_layer/widgets/activity.dart';
 import 'package:mobile/ui_layer/pages/project_details/widgets/project_configuration_card.dart';
 import 'package:mobile/ui_layer/pages/project_details/widgets/project_status_card.dart';
 import 'package:mobile/ui_layer/theme/app_colors.dart';

@@ -6,6 +6,6 @@ class ProjectsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: Scaffold(body: ProjectsBody()));
+    return Scaffold(body: ProjectsBody());
   }
 }

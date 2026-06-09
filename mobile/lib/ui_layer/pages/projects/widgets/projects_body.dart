@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/ui_layer/layouts/deploy_flow_sliver_page.dart';
+import 'package:mobile/ui_layer/pages/create_project/create_project_page.dart';
 import 'package:mobile/ui_layer/pages/project_details/project_details_page.dart';
 import 'package:mobile/ui_layer/pages/projects/widgets/project_card.dart';
 import 'package:mobile/ui_layer/theme/app_spacing.dart';
@@ -26,7 +27,14 @@ class ProjectsBody extends StatelessWidget {
           ),
           SizedBox(height: AppSpacing.lg),
           FilledButton.icon(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CreateProjectPage(),
+                ),
+              );
+            },
             icon: Icon(Icons.add),
             label: Text("Create Project"),
           ),
