@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:mobile/ui_layer/theme/app_colors.dart';
 import 'package:mobile/ui_layer/theme/app_spacing.dart';
 import 'package:mobile/ui_layer/widgets/status_card_item.dart';
+import 'package:mobile/ui_layer/widgets/text_link.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ProjectConfigurationCard extends StatelessWidget {
   const ProjectConfigurationCard({super.key});
@@ -68,6 +70,20 @@ class ProjectConfigurationCard extends StatelessWidget {
                 child: StatusCardItem(
                   label: "Domain",
                   value: "damienhensen.nl",
+                  valueWidget: TextLink(
+                    label: Text(
+                      "damienhensen.nl",
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    onTap: () async {
+                      await launchUrl(
+                        Uri.parse("https://damienhensen.nl"),
+                        mode: LaunchMode.externalApplication,
+                      );
+                    },
+                  ),
                 ),
               ),
             ],
