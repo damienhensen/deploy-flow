@@ -1,6 +1,11 @@
 package project
 
-import "github.com/google/uuid"
+import (
+	"errors"
+	"strings"
+
+	"github.com/google/uuid"
+)
 
 type Service struct {
 	repository *Repository
@@ -15,6 +20,22 @@ func (s *Service) FindAll() ([]Project, error) {
 }
 
 func (s *Service) Create(name, repositoryURL, branch, provider string) (Project, error) {
+	if strings.TrimSpace(name) == "" {
+		return Project{}, errors.New("name is required")
+	}
+
+	if strings.TrimSpace(repositoryURL) == "" {
+		return Project{}, errors.New("repository URL is required")
+	}
+
+	if strings.TrimSpace(branch) == "" {
+		return Project{}, errors.New("branch is required")
+	}
+
+	if strings.TrimSpace(provider) == "" {
+		return Project{}, errors.New("provider is required")
+	}
+
 	project := Project{
 		ID:            uuid.New().String(),
 		Name:          name,

@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/damienhensen/deploy-flow/backend/graph"
 	"github.com/damienhensen/deploy-flow/backend/internal/config"
 	"github.com/damienhensen/deploy-flow/backend/internal/database"
 	"github.com/damienhensen/deploy-flow/backend/internal/project"
@@ -35,19 +37,16 @@ func main() {
 	// Wire Project Service
 	projectRepository := project.NewRepository(db)
 	projectService := project.NewService(projectRepository)
-	projectHandler := project.NewHandler(projectService)
 
-	// Create Project
-	http.HandleFunc("/projects", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodPost:
-			projectHandler.Create(w, r)
-		case http.MethodGet:
-			projectHandler.FindAll(w, r)
-		default:
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
+	srv := handler.NewDefaultServer(graph.NewExecutableSchema(
+		graph.Config{
+			Resolvers: &graph.Resolver{
+				ProjectService: projectService,
+			},
+		},
+	))
+
+	http.Handle("/graphql", srv)
 
 	log.Println("Starting DeployFlow backend on :" + cfg.Port)
 

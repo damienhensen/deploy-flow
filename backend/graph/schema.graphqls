@@ -1,0 +1,24 @@
+type Project {
+  id: ID!
+  name: String!
+  repositoryUrl: String!
+  branch: String!
+  provider: String!
+  createdAt: String!
+  updatedAt: String!
+}
+
+input CreateProjectInput {
+  name: String!
+  repositoryUrl: String!
+  branch: String!
+  provider: String!
+}
+
+type Query {
+  projects: [Project!]!
+}
+
+type Mutation {
+  createProject(input: CreateProjectInput!): Project!
+}
