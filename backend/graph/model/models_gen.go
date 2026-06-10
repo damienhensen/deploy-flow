@@ -3,10 +3,11 @@
 package model
 
 type CreateProjectInput struct {
-	Name          string `json:"name"`
 	RepositoryURL string `json:"repositoryUrl"`
 	Branch        string `json:"branch"`
 	Provider      string `json:"provider"`
+	Domain        string `json:"domain"`
+	Subdomain     string `json:"subdomain"`
 }
 
 type Mutation struct {
@@ -18,6 +19,8 @@ type Project struct {
 	RepositoryURL string `json:"repositoryUrl"`
 	Branch        string `json:"branch"`
 	Provider      string `json:"provider"`
+	Domain        string `json:"domain"`
+	Subdomain     string `json:"subdomain"`
 	CreatedAt     string `json:"createdAt"`
 	UpdatedAt     string `json:"updatedAt"`
 }

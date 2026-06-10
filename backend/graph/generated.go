@@ -44,10 +44,12 @@ type ComplexityRoot struct {
 	Project struct {
 		Branch        func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
+		Domain        func(childComplexity int) int
 		ID            func(childComplexity int) int
 		Name          func(childComplexity int) int
 		Provider      func(childComplexity int) int
 		RepositoryURL func(childComplexity int) int
+		Subdomain     func(childComplexity int) int
 		UpdatedAt     func(childComplexity int) int
 	}
 
@@ -101,6 +103,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Project.CreatedAt(childComplexity), true
+	case "Project.domain":
+		if e.ComplexityRoot.Project.Domain == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Project.Domain(childComplexity), true
 	case "Project.id":
 		if e.ComplexityRoot.Project.ID == nil {
 			break
@@ -125,6 +133,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Project.RepositoryURL(childComplexity), true
+	case "Project.subdomain":
+		if e.ComplexityRoot.Project.Subdomain == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Project.Subdomain(childComplexity), true
 	case "Project.updatedAt":
 		if e.ComplexityRoot.Project.UpdatedAt == nil {
 			break
@@ -254,6 +268,10 @@ func (ec *executionContext) childFields_Project(ctx context.Context, field graph
 		return ec.fieldContext_Project_branch(ctx, field)
 	case "provider":
 		return ec.fieldContext_Project_provider(ctx, field)
+	case "domain":
+		return ec.fieldContext_Project_domain(ctx, field)
+	case "subdomain":
+		return ec.fieldContext_Project_subdomain(ctx, field)
 	case "createdAt":
 		return ec.fieldContext_Project_createdAt(ctx, field)
 	case "updatedAt":
@@ -626,6 +644,52 @@ func (ec *executionContext) _Project_provider(ctx context.Context, field graphql
 	)
 }
 func (ec *executionContext) fieldContext_Project_provider(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Project", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Project_domain(ctx context.Context, field graphql.CollectedField, obj *model.Project) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Project_domain(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Domain, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Project_domain(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Project", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Project_subdomain(ctx context.Context, field graphql.CollectedField, obj *model.Project) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Project_subdomain(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Subdomain, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Project_subdomain(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("Project", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
@@ -1853,20 +1917,13 @@ func (ec *executionContext) unmarshalInputCreateProjectInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "repositoryUrl", "branch", "provider"}
+	fieldsInOrder := [...]string{"repositoryUrl", "branch", "provider", "domain", "subdomain"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Name = data
 		case "repositoryUrl":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("repositoryUrl"))
 			data, err := ec.unmarshalNString2string(ctx, v)
@@ -1888,6 +1945,20 @@ func (ec *executionContext) unmarshalInputCreateProjectInput(ctx context.Context
 				return it, err
 			}
 			it.Provider = data
+		case "domain":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("domain"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Domain = data
+		case "subdomain":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subdomain"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Subdomain = data
 		}
 	}
 	return it, nil
@@ -1983,6 +2054,16 @@ func (ec *executionContext) _Project(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "provider":
 			out.Values[i] = ec._Project_provider(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "domain":
+			out.Values[i] = ec._Project_domain(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "subdomain":
+			out.Values[i] = ec._Project_subdomain(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

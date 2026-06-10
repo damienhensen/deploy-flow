@@ -4,15 +4,18 @@ type Project {
   repositoryUrl: String!
   branch: String!
   provider: String!
+  domain: String!
+  subdomain: String!
   createdAt: String!
   updatedAt: String!
 }
 
 input CreateProjectInput {
-  name: String!
   repositoryUrl: String!
   branch: String!
   provider: String!
+  domain: String!
+  subdomain: String!
 }
 
 type Query {

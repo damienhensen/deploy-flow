@@ -144,10 +144,11 @@ class CreateProjectProvider extends ChangeNotifier {
 
     try {
       await repository.createProject(
-        "placeholder",
         _selectedRepository,
         _selectedBranch,
         _selectedProvider,
+        _domain,
+        _subdomain
       );
       return true;
     } catch (e) {

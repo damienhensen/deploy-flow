@@ -27,20 +27,22 @@ class ProjectRepository {
   }
 
   Future<ProjectCreateResponse> createProject(
-    String name,
     String repositoryUrl,
     String branch,
     String provider,
+    String domain,
+    String subdomain,
   ) async {
     final result = await client.mutate(
       MutationOptions(
         document: gql(ProjectMutations.createProject),
         variables: {
           "input": {
-            "name": name,
             "repositoryUrl": repositoryUrl,
             "branch": branch,
             "provider": provider,
+            "domain": domain,
+            "subdomain": subdomain,
           },
         },
       ),

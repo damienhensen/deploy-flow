@@ -14,7 +14,7 @@ func (r *Repository) FindAll() ([]Project, error) {
 	var projects []Project
 
 	err := r.db.Select(&projects, `
-		SELECT id, name, repository_url, branch, provider, created_at, updated_at
+		SELECT id, name, repository_url, branch, provider, domain, subdomain, created_at, updated_at
 		FROM projects
 		ORDER BY created_at DESC
 	`)
@@ -26,7 +26,7 @@ func (r *Repository) FindByID(id string) (Project, error) {
 	var project Project
 
 	err := r.db.Get(&project, `
-		SELECT id, name, repository_url, branch, provider, created_at, updated_at
+		SELECT id, name, repository_url, branch, provider, domain, subdomain, created_at, updated_at
 		FROM projects
 		WHERE id = ?
 	`, id)
@@ -35,7 +35,10 @@ func (r *Repository) FindByID(id string) (Project, error) {
 }
 
 func (r *Repository) Create(project Project) error {
-	_, err := r.db.Exec("INSERT INTO projects (id, name, repository_url, branch, provider) VALUES (?, ?, ?, ?, ?)", project.ID, project.Name, project.RepositoryURL, project.Branch, project.Provider)
+	_, err := r.db.Exec(
+		"INSERT INTO projects (id, name, repository_url, branch, provider, domain, subdomain) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		project.ID, project.Name, project.RepositoryURL, project.Branch, project.Provider, project.Domain, project.Subdomain,
+	)
 
 	return err
 }
