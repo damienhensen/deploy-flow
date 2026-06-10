@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/ui_layer/layouts/deploy_flow_sliver_page.dart';
-import 'package:mobile/ui_layer/pages/create_project/widgets/pre_flight_check.dart';
+import 'package:mobile/ui_layer/widgets/step_status.dart';
 import 'package:mobile/ui_layer/pages/create_project/widgets/project_verification_card.dart';
 import 'package:mobile/ui_layer/pages/create_project/widgets/step_indicator.dart';
 import 'package:mobile/ui_layer/providers/create_project_provider.dart';
-import 'package:mobile/ui_layer/theme/app_colors.dart';
 import 'package:mobile/ui_layer/theme/app_spacing.dart';
-import 'package:mobile/ui_layer/widgets/activity.dart';
-import 'package:mobile/ui_layer/widgets/selection_card.dart';
 import 'package:provider/provider.dart';
 
 class VerifyStep extends StatelessWidget {
@@ -58,16 +55,25 @@ class VerifyStep extends StatelessWidget {
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 SizedBox(height: AppSpacing.md),
-                PreFlightCheck(label: "Repository accessible", success: true),
-                SizedBox(height: AppSpacing.md),
-                PreFlightCheck(
-                  label: "Docker Compose not detected",
-                  success: false,
+                StepStatus(
+                  label: "Repository accessible",
+                  status: StepStatusState.success,
                 ),
                 SizedBox(height: AppSpacing.md),
-                PreFlightCheck(label: "Permissions verified", success: true),
+                StepStatus(
+                  label: "Docker Compose not detected",
+                  status: StepStatusState.error,
+                ),
                 SizedBox(height: AppSpacing.md),
-                PreFlightCheck(label: "Ready for deployment", success: true),
+                StepStatus(
+                  label: "Permissions verified",
+                  status: StepStatusState.success,
+                ),
+                SizedBox(height: AppSpacing.md),
+                StepStatus(
+                  label: "Ready for deployment",
+                  status: StepStatusState.success,
+                ),
               ],
             ),
           ),

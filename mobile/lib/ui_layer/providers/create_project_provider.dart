@@ -4,7 +4,7 @@ import 'package:mobile/ui_layer/pages/create_project/widgets/domain_step.dart';
 import 'package:mobile/ui_layer/pages/create_project/widgets/provider_step.dart';
 import 'package:mobile/ui_layer/pages/create_project/widgets/repository_step.dart';
 import 'package:mobile/ui_layer/pages/create_project/widgets/verify_step.dart';
-import 'package:mobile/ui_layer/pages/project_details/project_details_page.dart';
+import 'package:mobile/ui_layer/pages/deployment/deployment_page.dart';
 
 class CreateProjectProvider extends ChangeNotifier {
   final List<StatelessWidget> _steps = [
@@ -88,7 +88,7 @@ class CreateProjectProvider extends ChangeNotifier {
     if (currentStep == totalSteps) {
       await Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const ProjectDetailsPage()),
+        MaterialPageRoute(builder: (context) => const DeploymentPage()),
       );
 
       _currentStep = 0;
