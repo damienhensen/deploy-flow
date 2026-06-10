@@ -1,0 +1,10 @@
+services:
+  backend:
+    image: cosmtrek/air:latest
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+    ports:
+      - "80:8080"
+    env_file:
+      - ./backend/.env
