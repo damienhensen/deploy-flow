@@ -7,6 +7,7 @@ import (
 
 	"github.com/damienhensen/deploy-flow/backend/internal/config"
 	"github.com/damienhensen/deploy-flow/backend/internal/database"
+	"github.com/damienhensen/deploy-flow/backend/internal/project"
 )
 
 func main() {
@@ -29,6 +30,23 @@ func main() {
 		}
 
 		fmt.Fprintln(w, "ok")
+	})
+
+	// Wire Project Service
+	projectRepository := project.NewRepository(db)
+	projectService := project.NewService(projectRepository)
+	projectHandler := project.NewHandler(projectService)
+
+	// Create Project
+	http.HandleFunc("/projects", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			projectHandler.Create(w, r)
+		case http.MethodGet:
+			projectHandler.FindAll(w, r)
+		default:
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		}
 	})
 
 	log.Println("Starting DeployFlow backend on :" + cfg.Port)
