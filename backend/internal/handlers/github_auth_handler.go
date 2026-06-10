@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/damienhensen/deploy-flow/backend/internal/auth"
 	"github.com/damienhensen/deploy-flow/backend/internal/user"
 )
 
@@ -16,14 +17,18 @@ type GitHubAuthHandler struct {
 	ClientSecret   string
 	RedirectURL    string
 	UserRepository *user.Repository
+	AuthService    *auth.Service
+	AuthRepository *auth.Repository
 }
 
-func NewGitHubAuthHandler(clientID, clientSecret, redirectURL string, userRepository *user.Repository) *GitHubAuthHandler {
+func NewGitHubAuthHandler(clientID, clientSecret, redirectURL string, userRepository *user.Repository, authService *auth.Service, authRepository *auth.Repository) *GitHubAuthHandler {
 	return &GitHubAuthHandler{
 		ClientID:       clientID,
 		ClientSecret:   clientSecret,
 		RedirectURL:    redirectURL,
 		UserRepository: userRepository,
+		AuthService:    authService,
+		AuthRepository: authRepository,
 	}
 }
 
@@ -41,6 +46,11 @@ type GitHubUserResponse struct {
 	Name      string `json:"name"`
 	AvatarURL string `json:"avatar_url"`
 	Email     string `json:"email"`
+}
+
+type AppSession struct {
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
 }
 
 func (h *GitHubAuthHandler) Login(w http.ResponseWriter, r *http.Request) {
@@ -62,32 +72,77 @@ func (h *GitHubAuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenResponse, err := h.exchangeCodeForToken(code)
+	appUser, err := h.authenticateWithGitHub(code)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	session, err := h.createAppSession(appUser.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	h.writeSessionResponse(w, session)
+}
+
+func (h *GitHubAuthHandler) authenticateWithGitHub(code string) (user.User, error) {
+	tokenResponse, err := h.exchangeCodeForToken(code)
+	if err != nil {
+		return user.User{}, err
 	}
 
 	githubUser, err := h.fetchGitHubUser(tokenResponse.AccessToken)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return user.User{}, err
 	}
 
-	appUser, err := h.UserRepository.FindOrCreateUserByProviderAccount(
+	return h.UserRepository.FindOrCreateUserByProviderAccount(
 		"github",
 		strconv.FormatInt(githubUser.ID, 10),
 		githubUser.Login,
 		githubUser.AvatarURL,
 		tokenResponse.AccessToken,
 	)
+}
+
+func (h *GitHubAuthHandler) createAppSession(userID int64) (AppSession, error) {
+	accessToken, err := h.AuthService.GenerateAccessToken(userID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return AppSession{}, err
 	}
 
+	refreshToken, err := h.AuthService.GenerateRefreshToken()
+	if err != nil {
+		return AppSession{}, err
+	}
+
+	refreshTokenHash, err := h.AuthService.HashRefreshToken(refreshToken)
+	if err != nil {
+		return AppSession{}, err
+	}
+
+	err = h.AuthRepository.CreateRefreshToken(
+		userID,
+		refreshTokenHash,
+		h.AuthService.RefreshTokenExpiresAt(),
+	)
+	if err != nil {
+		return AppSession{}, err
+	}
+
+	return AppSession{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
+}
+
+func (h *GitHubAuthHandler) writeSessionResponse(w http.ResponseWriter, session AppSession) {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte("Logged in as user ID: " + strconv.FormatInt(appUser.ID, 10)))
+
+	_ = json.NewEncoder(w).Encode(session)
 }
 
 func (h *GitHubAuthHandler) exchangeCodeForToken(code string) (GitHubTokenResponse, error) {
