@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/ui_layer/layouts/deploy_flow_sliver_page.dart';
+import 'package:mobile/ui_layer/pages/logs/logs_page.dart';
 import 'package:mobile/ui_layer/widgets/activity.dart';
 import 'package:mobile/ui_layer/pages/project_details/widgets/project_configuration_card.dart';
 import 'package:mobile/ui_layer/pages/project_details/widgets/project_status_card.dart';
@@ -124,7 +125,12 @@ class ProjectDetails extends StatelessWidget {
                 ),
                 SizedBox(height: AppSpacing.sm),
                 IconLink(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LogsPage()),
+                    );
+                  },
                   label: "View Logs",
                   icon: Icons.terminal,
                 ),

@@ -19,7 +19,13 @@ class DeploymentBody extends StatelessWidget {
       ],
       header: Column(
         crossAxisAlignment: .start,
-        children: [DeploymentIndicator(currentStep: 4, totalSteps: 7, status: DeploymentStatusState.loading,)],
+        children: [
+          DeploymentIndicator(
+            currentStep: 4,
+            totalSteps: 7,
+            status: DeploymentStatusState.loading,
+          ),
+        ],
       ),
       slivers: [
         SliverPadding(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/ui_layer/pages/deployment/widgets/deployment_body.dart';
+import 'package:mobile/ui_layer/pages/logs/logs_page.dart';
 import 'package:mobile/ui_layer/pages/project_details/project_details_page.dart';
 import 'package:mobile/ui_layer/theme/app_colors.dart';
 import 'package:mobile/ui_layer/theme/app_spacing.dart';
@@ -39,7 +40,12 @@ class DeploymentPage extends StatelessWidget {
               const SizedBox(height: AppSpacing.md),
 
               OutlinedButton.icon(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LogsPage()),
+                  );
+                },
                 icon: const Icon(Icons.terminal),
                 label: const Text("View Logs"),
                 style: const ButtonStyle(
