@@ -22,6 +22,14 @@ class AuthRepository {
     return _secureStorage.read(key: _refreshTokenKey);
   }
 
+  Future<void> updateAccessToken(String token) async {
+    await _secureStorage.write(key: _accessTokenKey, value: token);
+  }
+
+  Future<void> updateRefreshToken(String token) async {
+    await _secureStorage.write(key: _refreshTokenKey, value: token);
+  }
+
   Future<void> clearTokens() async {
     await _secureStorage.delete(key: _accessTokenKey);
     await _secureStorage.delete(key: _refreshTokenKey);

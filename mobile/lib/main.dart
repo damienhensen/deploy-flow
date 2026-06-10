@@ -10,7 +10,7 @@ import 'package:mobile/ui_layer/providers/projects_provider.dart';
 import 'package:provider/provider.dart';
 
 void main() {
-  final graphQLClient = DeployFlowGraphQLClient.create();
+  final graphQLClient = DeployFlowGraphQLClient.create(AuthRepository());
 
   runApp(
     MultiProvider(

@@ -20,7 +20,11 @@ func (s *Service) FindAll() ([]Project, error) {
 	return s.repository.FindAll()
 }
 
-func (s *Service) Create(repositoryURL, branch, provider, domain, subdomain string) (Project, error) {
+func (s *Service) FindAllForUser(userID int64) ([]Project, error) {
+	return s.repository.FindAllForUser(userID)
+}
+
+func (s *Service) Create(userID int64, repositoryURL, branch, provider, domain, subdomain string) (Project, error) {
 	// if strings.TrimSpace(name) == "" {
 	// 	return Project{}, errors.New("name is required")
 	// }
@@ -51,6 +55,7 @@ func (s *Service) Create(repositoryURL, branch, provider, domain, subdomain stri
 
 	project := Project{
 		ID:            uuid.New().String(),
+		UserID:        userID,
 		Name:          name,
 		RepositoryURL: repositoryURL,
 		Branch:        branch,

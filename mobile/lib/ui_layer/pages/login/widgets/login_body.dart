@@ -73,9 +73,6 @@ class LoginBody extends StatelessWidget {
               ),
             ),
 
-            Text(viewModel.isAuthenticated.toString()),
-            Text(viewModel.isLoading.toString()),
-
             const Spacer(flex: 3),
 
             RichText(

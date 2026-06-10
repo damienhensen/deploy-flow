@@ -2,7 +2,9 @@ package auth
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -49,4 +51,9 @@ func (s *Service) GenerateRefreshToken() (string, error) {
 
 func (s *Service) RefreshTokenExpiresAt() time.Time {
 	return time.Now().Add(30 * 24 * time.Hour)
+}
+
+func (s *Service) HashRefreshToken(refreshToken string) string {
+	hash := sha256.Sum256([]byte(refreshToken))
+	return hex.EncodeToString(hash[:])
 }

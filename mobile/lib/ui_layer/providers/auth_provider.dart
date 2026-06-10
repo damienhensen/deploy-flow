@@ -50,11 +50,59 @@ class AuthProvider extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
 
-    accessToken = await authRepository.getAccessToken();
-    isAuthenticated = accessToken != null && accessToken!.isNotEmpty;
+    final storedAccessToken = await authRepository.getAccessToken();
+    final storedRefreshToken = await authRepository.getRefreshToken();
+
+    if (storedAccessToken == null || storedRefreshToken == null) {
+      isAuthenticated = false;
+      isLoading = false;
+      notifyListeners();
+      return;
+    }
+
+    accessToken = storedAccessToken;
+    isAuthenticated = true;
+
+    await refreshSession();
 
     isLoading = false;
     notifyListeners();
+  }
+
+  Future<bool> refreshSession() async {
+    final storedRefreshToken = await authRepository.getRefreshToken();
+
+    if (storedRefreshToken == null || storedRefreshToken.isEmpty) {
+      await logout();
+      return false;
+    }
+
+    try {
+      final response = await authService.refresh(storedRefreshToken);
+
+      final newAccessToken = response['accessToken'] as String?;
+      final newRefreshToken = response['refreshToken'] as String?;
+
+      if (newAccessToken == null || newRefreshToken == null) {
+        await logout();
+        return false;
+      }
+
+      await authRepository.storeTokens(
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+      );
+
+      accessToken = newAccessToken;
+      isAuthenticated = true;
+
+      notifyListeners();
+
+      return true;
+    } catch (_) {
+      await logout();
+      return false;
+    }
   }
 
   Future<void> logout() async {

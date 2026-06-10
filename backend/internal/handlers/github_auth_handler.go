@@ -174,10 +174,7 @@ func (h *GitHubAuthHandler) createAppSession(userID int64) (AppSession, error) {
 		return AppSession{}, err
 	}
 
-	refreshTokenHash, err := h.AuthService.HashRefreshToken(refreshToken)
-	if err != nil {
-		return AppSession{}, err
-	}
+	refreshTokenHash := h.AuthService.HashRefreshToken(refreshToken)
 
 	err = h.AuthRepository.CreateRefreshToken(
 		userID,

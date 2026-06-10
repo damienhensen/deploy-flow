@@ -12,6 +12,7 @@ import (
 	"github.com/damienhensen/deploy-flow/backend/internal/config"
 	"github.com/damienhensen/deploy-flow/backend/internal/database"
 	"github.com/damienhensen/deploy-flow/backend/internal/handlers"
+	"github.com/damienhensen/deploy-flow/backend/internal/middelware"
 	"github.com/damienhensen/deploy-flow/backend/internal/project"
 	"github.com/damienhensen/deploy-flow/backend/internal/user"
 )
@@ -26,18 +27,30 @@ func main() {
 
 	defer db.Close()
 
+	// Auth stuff
+	authService := auth.NewService(os.Getenv("JWT_SECRET"))
+	authRepository := auth.NewRepository(db)
+
 	// GitHub OAuth
 	githubAuthHandler := handlers.NewGitHubAuthHandler(
 		os.Getenv("GITHUB_CLIENT_ID"),
 		os.Getenv("GITHUB_CLIENT_SECRET"),
 		os.Getenv("GITHUB_REDIRECT_URL"),
 		user.NewRepository(db),
-		auth.NewService(os.Getenv("JWT_SECRET")),
-		auth.NewRepository(db),
+		authService,
+		authRepository,
 	)
 
 	http.HandleFunc("/auth/github/login", githubAuthHandler.Login)
 	http.HandleFunc("/auth/github/callback", githubAuthHandler.Callback)
+
+	// Refresh tokens
+	authHandler := handlers.NewAuthHandler(
+		authService,
+		authRepository,
+	)
+
+	http.HandleFunc("/auth/refresh", authHandler.Refresh)
 
 	// Status
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -52,11 +65,11 @@ func main() {
 		fmt.Fprintln(w, "ok")
 	})
 
-	// Wire Project Service
+	// GraphQL
 	projectRepository := project.NewRepository(db)
 	projectService := project.NewService(projectRepository)
 
-	srv := handler.NewDefaultServer(graph.NewExecutableSchema(
+	grapqlHandler := handler.NewDefaultServer(graph.NewExecutableSchema(
 		graph.Config{
 			Resolvers: &graph.Resolver{
 				ProjectService: projectService,
@@ -64,7 +77,7 @@ func main() {
 		},
 	))
 
-	http.Handle("/graphql", srv)
+	http.Handle("/graphql", middelware.RequireAuth(authService, grapqlHandler))
 
 	log.Println("Starting DeployFlow backend on :" + cfg.Port)
 

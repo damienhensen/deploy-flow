@@ -4,6 +4,7 @@ import "time"
 
 type Project struct {
 	ID            string    `db:"id"`
+	UserID        int64     `db:"user_id"`
 	Name          string    `db:"name"`
 	RepositoryURL string    `db:"repository_url"`
 	Branch        string    `db:"branch"`

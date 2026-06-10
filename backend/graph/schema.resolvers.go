@@ -9,11 +9,18 @@ import (
 	"context"
 
 	"github.com/damienhensen/deploy-flow/backend/graph/model"
+	"github.com/damienhensen/deploy-flow/backend/internal/middelware"
 )
 
 // CreateProject is the resolver for the createProject field.
 func (r *mutationResolver) CreateProject(ctx context.Context, input model.CreateProjectInput) (*model.Project, error) {
+	userID, err := middelware.GetUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	p, err := r.ProjectService.Create(
+		userID,
 		input.RepositoryURL,
 		input.Branch,
 		input.Provider,
@@ -40,7 +47,12 @@ func (r *mutationResolver) CreateProject(ctx context.Context, input model.Create
 
 // Projects is the resolver for the projects field.
 func (r *queryResolver) Projects(ctx context.Context) ([]*model.Project, error) {
-	projects, err := r.ProjectService.FindAll()
+	userID, err := middelware.GetUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	projects, err := r.ProjectService.FindAllForUser(userID)
 	if err != nil {
 		return nil, err
 	}
