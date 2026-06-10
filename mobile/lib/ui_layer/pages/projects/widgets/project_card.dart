@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/data_layer/models/project_list_item.dart';
 import 'package:mobile/ui_layer/theme/app_colors.dart';
 import 'package:mobile/ui_layer/theme/app_spacing.dart';
 import 'package:mobile/ui_layer/widgets/status_chip.dart';
 
 class ProjectCard extends StatelessWidget {
+  final ProjectListItem project;
   final VoidCallback? onTap;
 
-  const ProjectCard({super.key, this.onTap});
+  const ProjectCard({super.key, required this.project, this.onTap });
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +36,7 @@ class ProjectCard extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        "Portfolio",
+                        project.name,
                         style: Theme.of(context).textTheme.headlineSmall,
                       ),
                       const Spacer(),
@@ -49,7 +51,7 @@ class ProjectCard extends StatelessWidget {
                           Icon(Icons.cloud_outlined, size: AppSpacing.md),
                           SizedBox(width: AppSpacing.xs),
                           Text(
-                            "DigitalOcean",
+                            project.provider,
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ],
@@ -70,7 +72,7 @@ class ProjectCard extends StatelessWidget {
                           ),
                           SizedBox(width: AppSpacing.xs),
                           Text(
-                            "main",
+                            project.branch,
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ],

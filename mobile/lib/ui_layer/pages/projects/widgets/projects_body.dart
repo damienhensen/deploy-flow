@@ -3,14 +3,26 @@ import 'package:mobile/ui_layer/layouts/deploy_flow_sliver_page.dart';
 import 'package:mobile/ui_layer/pages/create_project/create_project_page.dart';
 import 'package:mobile/ui_layer/pages/project_details/project_details_page.dart';
 import 'package:mobile/ui_layer/pages/projects/widgets/project_card.dart';
+import 'package:mobile/ui_layer/providers/projects_provider.dart';
 import 'package:mobile/ui_layer/theme/app_spacing.dart';
 import 'package:mobile/ui_layer/widgets/filter_status_chip.dart';
+import 'package:provider/provider.dart';
 
 class ProjectsBody extends StatelessWidget {
   const ProjectsBody({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = context.watch<ProjectsProvider>();
+
+    if (viewModel.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (viewModel.error != null) {
+      return Center(child: Text(viewModel.error!));
+    }
+
     final selectedFilter = "All";
 
     return DeployFlowSliverPage(
@@ -95,9 +107,12 @@ class ProjectsBody extends StatelessWidget {
         SliverPadding(
           padding: const EdgeInsets.all(AppSpacing.md),
           sliver: SliverList.separated(
-            itemCount: 10,
+            itemCount: viewModel.projects.length,
             itemBuilder: (context, idx) {
+              final project = viewModel.projects[idx];
+
               return ProjectCard(
+                project: project,
                 onTap: () {
                   Navigator.push(
                     context,
