@@ -57,7 +57,16 @@ class CreateProjectPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (isLastStep) ...[
-                      Icon(Icons.rocket_launch),
+                      viewModel.isLoading
+                          ? SizedBox(
+                              width: AppSpacing.md,
+                              height: AppSpacing.md,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.onPrimary,
+                              ),
+                            )
+                          : Icon(Icons.rocket_launch),
                       SizedBox(width: AppSpacing.sm),
                     ],
                     isLastStep ? Text("Create Project") : Text("Next"),

@@ -50,6 +50,7 @@ class RepositoryStep extends StatelessWidget {
               String repository = viewModel.repositories[idx];
 
               String repositoryName = repository;
+              bool selected = repositoryName == viewModel.selectedRepository;
 
               return SelectionCard(
                 onTap: () {
@@ -57,7 +58,7 @@ class RepositoryStep extends StatelessWidget {
                 },
                 title: repositoryName,
                 icon: Icons.folder_outlined,
-                selected: repositoryName == viewModel.selectedRepository,
+                selected: selected,
                 label: "PUBLIC",
                 description: Row(
                   children: [

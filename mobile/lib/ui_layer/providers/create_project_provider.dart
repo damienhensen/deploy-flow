@@ -1,13 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/data_layer/repositories/project_repository.dart';
 import 'package:mobile/ui_layer/pages/create_project/widgets/branch_step.dart';
 import 'package:mobile/ui_layer/pages/create_project/widgets/domain_step.dart';
 import 'package:mobile/ui_layer/pages/create_project/widgets/provider_step.dart';
 import 'package:mobile/ui_layer/pages/create_project/widgets/repository_step.dart';
 import 'package:mobile/ui_layer/pages/create_project/widgets/verify_step.dart';
 import 'package:mobile/ui_layer/pages/deployment/deployment_page.dart';
+import 'package:mobile/ui_layer/providers/projects_provider.dart';
+import 'package:provider/provider.dart';
 
 class CreateProjectProvider extends ChangeNotifier {
-  final List<StatelessWidget> _steps = [
+  final ProjectRepository repository;
+
+  CreateProjectProvider(this.repository);
+
+  // Net State
+  bool isLoading = false;
+  String? error;
+
+  final List<Widget> _steps = [
     RepositoryStep(),
     BranchStep(),
     ProviderStep(),
@@ -15,23 +26,24 @@ class CreateProjectProvider extends ChangeNotifier {
     VerifyStep(),
   ];
 
-  String _selectedRepository = "";
-  String _selectedBranch = "";
-  String _selectedProvider = "";
-  bool _usingCustomDomain = false;
-  String _domain = "";
-  String _subdomain = "";
-
+  // Local State
   final List<String> _availableRepositories = ["Portfolio", "FixMyCity"];
   final List<String> _availableBranches = ["main", "develop", "feat/auth"];
   final List<String> _availableProviders = ["DigitalOcean"];
   final List<String> _comingProviders = ["TransIP", "AWS", "Hetzner"];
 
+  late String _selectedRepository = _availableRepositories[0];
+  late String _selectedBranch = _availableBranches[0];
+  late String _selectedProvider = _availableProviders[0];
+  bool _usingCustomDomain = false;
+  String _domain = "";
+  String _subdomain = "";
+
   int _currentStep = 0;
 
   int get totalSteps => _steps.length;
   int get currentStep => _currentStep + 1;
-  StatelessWidget get currentStepWidget => _steps[_currentStep];
+  Widget get currentStepWidget => _steps[_currentStep];
 
   String get selectedRepository => _selectedRepository;
   List<String> get repositories => _availableRepositories;
@@ -50,7 +62,7 @@ class CreateProjectProvider extends ChangeNotifier {
   String get subdomain => _subdomain;
   String get domainPreview => _domain.isNotEmpty
       ? (_subdomain.isNotEmpty ? "$_subdomain.$_domain" : _domain)
-      : "example.com";
+      : "${_selectedRepository.toLowerCase()}-xyz.deployflow.app";
 
   // Setters
   void setRepository(String repository) {
@@ -86,13 +98,29 @@ class CreateProjectProvider extends ChangeNotifier {
   // Methods
   void nextStep(BuildContext context) async {
     if (currentStep == totalSteps) {
-      await Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const DeploymentPage()),
-      );
+      if (await createProject()) {
+        if (!context.mounted) return;
 
-      _currentStep = 0;
-      notifyListeners();
+        // Reload projects
+        context.read<ProjectsProvider>().loadProjects();
+
+        // Navigate to deployment page
+        await Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const DeploymentPage()),
+        );
+
+        // Reset state
+        _currentStep = 0;
+        _selectedRepository = _availableRepositories[0];
+        _selectedBranch = _availableBranches[0];
+        _selectedProvider = _availableProviders[0];
+        _usingCustomDomain = false;
+        _domain = "";
+        _subdomain = "";
+
+        notifyListeners();
+      }
 
       return;
     }
@@ -106,5 +134,29 @@ class CreateProjectProvider extends ChangeNotifier {
 
     _currentStep -= 1;
     notifyListeners();
+  }
+
+  // Create project / Start deployment
+  Future<bool> createProject() async {
+    isLoading = true;
+    error = null;
+    notifyListeners();
+
+    try {
+      await repository.createProject(
+        "placeholder",
+        _selectedRepository,
+        _selectedBranch,
+        _selectedProvider,
+      );
+      return true;
+    } catch (e) {
+      error = e.toString();
+      debugPrint(e.toString());
+      return false;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
 }

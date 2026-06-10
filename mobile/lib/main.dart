@@ -18,7 +18,10 @@ void main() {
         ChangeNotifierProvider(
           create: (_) => ProjectsProvider(ProjectRepository(graphQLClient)),
         ),
-        ChangeNotifierProvider(create: (_) => CreateProjectProvider()),
+        ChangeNotifierProvider(
+          create: (_) =>
+              CreateProjectProvider(ProjectRepository(graphQLClient)),
+        ),
       ],
       child: const App(),
     ),
