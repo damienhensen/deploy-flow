@@ -148,7 +148,7 @@ class CreateProjectProvider extends ChangeNotifier {
         _selectedBranch,
         _selectedProvider,
         _domain,
-        _subdomain
+        _subdomain,
       );
       return true;
     } catch (e) {

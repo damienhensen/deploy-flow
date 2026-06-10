@@ -1,8 +1,12 @@
 package handlers
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -53,12 +57,37 @@ type AppSession struct {
 	RefreshToken string `json:"refreshToken"`
 }
 
+func generateOAuthState() (string, error) {
+	bytes := make([]byte, 32)
+
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+
+	return base64.URLEncoding.EncodeToString(bytes), nil
+}
+
 func (h *GitHubAuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+	state, err := generateOAuthState()
+	if err != nil {
+		http.Error(w, "failed to generate oauth state", http.StatusInternalServerError)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "github_oauth_state",
+		Value:    state,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   10 * 60,
+	})
+
 	params := url.Values{}
 	params.Add("client_id", h.ClientID)
 	params.Add("redirect_uri", h.RedirectURL)
 	params.Add("scope", "repo read:user user:email")
-	params.Add("state", "temporary-dev-state")
+	params.Add("state", state)
 
 	authURL := "https://github.com/login/oauth/authorize?" + params.Encode()
 
@@ -67,10 +96,37 @@ func (h *GitHubAuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 func (h *GitHubAuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
+	state := r.URL.Query().Get("state")
+
 	if code == "" {
 		http.Error(w, "missing code", http.StatusBadRequest)
 		return
 	}
+
+	if state == "" {
+		http.Error(w, "missing state", http.StatusBadRequest)
+		return
+	}
+
+	stateCookie, err := r.Cookie("github_oauth_state")
+	if err != nil {
+		http.Error(w, "missing oauth state cookie", http.StatusBadRequest)
+		return
+	}
+
+	if stateCookie.Value != state {
+		http.Error(w, "invalid oauth state", http.StatusBadRequest)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "github_oauth_state",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   -1,
+	})
 
 	appUser, err := h.authenticateWithGitHub(code)
 	if err != nil {
@@ -84,7 +140,7 @@ func (h *GitHubAuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.writeSessionResponse(w, session)
+	h.writeSessionResponse(w, r, session)
 }
 
 func (h *GitHubAuthHandler) authenticateWithGitHub(code string) (user.User, error) {
@@ -138,11 +194,13 @@ func (h *GitHubAuthHandler) createAppSession(userID int64) (AppSession, error) {
 	}, nil
 }
 
-func (h *GitHubAuthHandler) writeSessionResponse(w http.ResponseWriter, session AppSession) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
+func (h *GitHubAuthHandler) writeSessionResponse(w http.ResponseWriter, r *http.Request, session AppSession) {
+	redirectURL := "deployflow://auth/success?" + url.Values{
+		"accessToken":  {session.AccessToken},
+		"refreshToken": {session.RefreshToken},
+	}.Encode()
 
-	_ = json.NewEncoder(w).Encode(session)
+	http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 }
 
 func (h *GitHubAuthHandler) exchangeCodeForToken(code string) (GitHubTokenResponse, error) {
@@ -170,8 +228,20 @@ func (h *GitHubAuthHandler) exchangeCodeForToken(code string) (GitHubTokenRespon
 	}
 	defer resp.Body.Close()
 
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return GitHubTokenResponse{}, err
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return GitHubTokenResponse{}, fmt.Errorf(
+			"github token exchange failed: %s",
+			string(body),
+		)
+	}
+
 	var tokenResponse GitHubTokenResponse
-	if err := json.NewDecoder(resp.Body).Decode(&tokenResponse); err != nil {
+	if err := json.Unmarshal(body, &tokenResponse); err != nil {
 		return GitHubTokenResponse{}, err
 	}
 

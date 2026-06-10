@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:mobile/ui_layer/pages/projects/projects_page.dart';
+import 'package:mobile/ui_layer/providers/auth_provider.dart';
 import 'package:mobile/ui_layer/theme/app_colors.dart';
 import 'package:mobile/ui_layer/theme/app_spacing.dart';
+import 'package:provider/provider.dart';
 
 class LoginBody extends StatelessWidget {
   const LoginBody({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = context.watch<AuthProvider>();
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -53,13 +56,8 @@ class LoginBody extends StatelessWidget {
             SizedBox(
               width: 280,
               child: FilledButton.icon(
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ProjectsPage(),
-                    ),
-                  );
+                onPressed: () async {
+                  await viewModel.loginWithGitHub();
                 },
                 style: FilledButton.styleFrom(
                   backgroundColor: const Color(0xFF24292F),
@@ -74,6 +72,9 @@ class LoginBody extends StatelessWidget {
                 label: const Text("Continue with GitHub"),
               ),
             ),
+
+            Text(viewModel.isAuthenticated.toString()),
+            Text(viewModel.isLoading.toString()),
 
             const Spacer(flex: 3),
 

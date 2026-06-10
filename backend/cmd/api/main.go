@@ -8,6 +8,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/damienhensen/deploy-flow/backend/graph"
+	"github.com/damienhensen/deploy-flow/backend/internal/auth"
 	"github.com/damienhensen/deploy-flow/backend/internal/config"
 	"github.com/damienhensen/deploy-flow/backend/internal/database"
 	"github.com/damienhensen/deploy-flow/backend/internal/handlers"
@@ -31,6 +32,8 @@ func main() {
 		os.Getenv("GITHUB_CLIENT_SECRET"),
 		os.Getenv("GITHUB_REDIRECT_URL"),
 		user.NewRepository(db),
+		auth.NewService(os.Getenv("JWT_SECRET")),
+		auth.NewRepository(db),
 	)
 
 	http.HandleFunc("/auth/github/login", githubAuthHandler.Login)
