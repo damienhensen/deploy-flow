@@ -2,12 +2,43 @@
 
 package model
 
+import (
+	"bytes"
+	"fmt"
+	"io"
+	"strconv"
+)
+
+type BranchDeploymentCheck struct {
+	HasDockerCompose bool    `json:"hasDockerCompose"`
+	ComposeFilePath  *string `json:"composeFilePath,omitempty"`
+}
+
 type CreateProjectInput struct {
+	Name          string `json:"name"`
 	RepositoryURL string `json:"repositoryUrl"`
 	Branch        string `json:"branch"`
 	Provider      string `json:"provider"`
 	Domain        string `json:"domain"`
 	Subdomain     string `json:"subdomain"`
+}
+
+type GitBranch struct {
+	Name                 string  `json:"name"`
+	UpdatedAt            string  `json:"updatedAt"`
+	LastCommitAuthorName *string `json:"lastCommitAuthorName,omitempty"`
+	LastCommitSha        string  `json:"lastCommitSha"`
+}
+
+type GitRepository struct {
+	ID            string               `json:"id"`
+	Name          string               `json:"name"`
+	FullName      string               `json:"fullName"`
+	Owner         string               `json:"owner"`
+	URL           string               `json:"url"`
+	DefaultBranch string               `json:"defaultBranch"`
+	UpdatedAt     string               `json:"updatedAt"`
+	Visibility    RepositoryVisibility `json:"visibility"`
 }
 
 type Mutation struct {
@@ -26,4 +57,59 @@ type Project struct {
 }
 
 type Query struct {
+}
+
+type RepositoryVisibility string
+
+const (
+	RepositoryVisibilityPublic  RepositoryVisibility = "PUBLIC"
+	RepositoryVisibilityPrivate RepositoryVisibility = "PRIVATE"
+)
+
+var AllRepositoryVisibility = []RepositoryVisibility{
+	RepositoryVisibilityPublic,
+	RepositoryVisibilityPrivate,
+}
+
+func (e RepositoryVisibility) IsValid() bool {
+	switch e {
+	case RepositoryVisibilityPublic, RepositoryVisibilityPrivate:
+		return true
+	}
+	return false
+}
+
+func (e RepositoryVisibility) String() string {
+	return string(e)
+}
+
+func (e *RepositoryVisibility) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = RepositoryVisibility(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid RepositoryVisibility", str)
+	}
+	return nil
+}
+
+func (e RepositoryVisibility) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *RepositoryVisibility) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e RepositoryVisibility) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }

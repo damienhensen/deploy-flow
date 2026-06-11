@@ -11,6 +11,8 @@ class ProjectVerificationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<CreateProjectProvider>();
+    final selectedRepo = viewModel.selectedRepository!;
+    final selectedBranch = viewModel.selectedBranch!;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -60,13 +62,13 @@ class ProjectVerificationCard extends StatelessWidget {
           VerificationRow(
             icon: Icons.folder_outlined,
             label: "Repository",
-            value: viewModel.selectedRepository,
+            value: selectedRepo.name,
           ),
           SizedBox(height: AppSpacing.sm),
           VerificationRow(
             icon: Icons.account_tree_outlined,
             label: "Branch",
-            value: viewModel.selectedBranch,
+            value: selectedBranch.name,
           ),
           SizedBox(height: AppSpacing.sm),
           VerificationRow(

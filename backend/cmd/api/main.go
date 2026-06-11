@@ -11,6 +11,8 @@ import (
 	"github.com/damienhensen/deploy-flow/backend/internal/auth"
 	"github.com/damienhensen/deploy-flow/backend/internal/config"
 	"github.com/damienhensen/deploy-flow/backend/internal/database"
+	"github.com/damienhensen/deploy-flow/backend/internal/gitprovider"
+	"github.com/damienhensen/deploy-flow/backend/internal/gitprovider/github"
 	"github.com/damienhensen/deploy-flow/backend/internal/handlers"
 	"github.com/damienhensen/deploy-flow/backend/internal/middelware"
 	"github.com/damienhensen/deploy-flow/backend/internal/project"
@@ -30,13 +32,14 @@ func main() {
 	// Auth stuff
 	authService := auth.NewService(os.Getenv("JWT_SECRET"))
 	authRepository := auth.NewRepository(db)
+	userRepository := user.NewRepository(db)
 
 	// GitHub OAuth
 	githubAuthHandler := handlers.NewGitHubAuthHandler(
 		os.Getenv("GITHUB_CLIENT_ID"),
 		os.Getenv("GITHUB_CLIENT_SECRET"),
 		os.Getenv("GITHUB_REDIRECT_URL"),
-		user.NewRepository(db),
+		userRepository,
 		authService,
 		authRepository,
 	)
@@ -69,10 +72,15 @@ func main() {
 	projectRepository := project.NewRepository(db)
 	projectService := project.NewService(projectRepository)
 
+	githubRepository := github.NewProvider(userRepository)
+
 	grapqlHandler := handler.NewDefaultServer(graph.NewExecutableSchema(
 		graph.Config{
 			Resolvers: &graph.Resolver{
 				ProjectService: projectService,
+				GitProviders: map[string]gitprovider.Provider{
+					"github": githubRepository,
+				},
 			},
 		},
 	))

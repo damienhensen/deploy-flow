@@ -1,3 +1,4 @@
+# (Internal) Projects
 type Project {
   id: ID!
   name: String!
@@ -11,6 +12,7 @@ type Project {
 }
 
 input CreateProjectInput {
+  name: String!
   repositoryUrl: String!
   branch: String!
   provider: String!
@@ -18,10 +20,45 @@ input CreateProjectInput {
   subdomain: String!
 }
 
-type Query {
-  projects: [Project!]!
+# Git
+type GitRepository {
+  id: ID!
+  name: String!
+  fullName: String!
+  owner: String!
+  url: String!
+  defaultBranch: String!
+  updatedAt: String!
+  visibility: RepositoryVisibility!
 }
 
+type GitBranch {
+  name: String!
+  updatedAt: String!
+  lastCommitAuthorName: String
+  lastCommitSha: String!
+}
+
+type BranchDeploymentCheck {
+  hasDockerCompose: Boolean!
+  composeFilePath: String
+}
+
+enum RepositoryVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+# Queries
+type Query {
+  projects: [Project!]!
+
+  gitRepositories(provider: String!): [GitRepository!]!
+  gitBranches(provider: String!, owner: String!, repo: String!): [GitBranch!]!
+  gitBranchDeploymentCheck(provider: String!, owner: String!, repo: String!, branch: String!): BranchDeploymentCheck!
+}
+
+# Mutations
 type Mutation {
   createProject(input: CreateProjectInput!): Project!
 }

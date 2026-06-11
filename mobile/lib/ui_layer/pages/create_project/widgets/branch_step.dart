@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/data_layer/models/git_branch_list_item.dart';
 import 'package:mobile/ui_layer/layouts/deploy_flow_sliver_page.dart';
 import 'package:mobile/ui_layer/pages/create_project/widgets/step_indicator.dart';
 import 'package:mobile/ui_layer/providers/create_project_provider.dart';
+import 'package:mobile/ui_layer/theme/app_helpers.dart';
 import 'package:mobile/ui_layer/theme/app_spacing.dart';
 import 'package:mobile/ui_layer/widgets/selection_card.dart';
 import 'package:provider/provider.dart';
@@ -41,32 +43,46 @@ class BranchStep extends StatelessWidget {
         ],
       ),
       slivers: [
-        SliverPadding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          sliver: SliverList.separated(
-            itemCount: viewModel.branches.length,
-            itemBuilder: (context, idx) {
-              String branch = viewModel.branches[idx];
-
-              String branchName = branch;
-
-              return SelectionCard(
-                onTap: () {
-                  viewModel.setBranch(branchName);
-                },
-                title: branchName,
-                icon: Icons.account_tree_outlined,
-                selected: branchName == viewModel.selectedBranch,
-                label: "2h ago",
-                description: Text(
-                  "damienhensen",
-                  style: Theme.of(context).textTheme.bodySmall,
+        viewModel.isLoading
+            ? SliverFillRemaining(
+                hasScrollBody: false,
+                child: Column(
+                  mainAxisAlignment: .center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: AppSpacing.lg),
+                    Text("Loading branches..."),
+                  ],
                 ),
-              );
-            },
-            separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
-          ),
-        ),
+              )
+            : SliverPadding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                sliver: SliverList.separated(
+                  itemCount: viewModel.branches.length,
+                  itemBuilder: (context, idx) {
+                    GitBranchListItem branch = viewModel.branches[idx];
+                    final selectedBranch = viewModel.selectedBranch!;
+
+                    String branchName = branch.name;
+
+                    return SelectionCard(
+                      onTap: () {
+                        viewModel.setBranch(branch);
+                      },
+                      title: branchName,
+                      icon: Icons.account_tree_outlined,
+                      selected: branchName == selectedBranch.name,
+                      label: AppHelpers.timeAgo(branch.updatedAt),
+                      description: Text(
+                        branch.lastCommitAuthorName,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    );
+                  },
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(height: AppSpacing.md),
+                ),
+              ),
       ],
     );
   }

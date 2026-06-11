@@ -19,9 +19,7 @@ class AuthService {
     final response = await http.post(
       Uri.parse('http://192.168.178.126/auth/refresh'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'refreshToken': refreshToken
-      }),
+      body: jsonEncode({'refreshToken': refreshToken}),
     );
 
     if (response.statusCode != 200) {

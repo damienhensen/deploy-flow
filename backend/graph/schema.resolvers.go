@@ -7,6 +7,8 @@ package graph
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/damienhensen/deploy-flow/backend/graph/model"
 	"github.com/damienhensen/deploy-flow/backend/internal/middelware"
@@ -21,6 +23,7 @@ func (r *mutationResolver) CreateProject(ctx context.Context, input model.Create
 
 	p, err := r.ProjectService.Create(
 		userID,
+		input.Name,
 		input.RepositoryURL,
 		input.Branch,
 		input.Provider,
@@ -74,6 +77,99 @@ func (r *queryResolver) Projects(ctx context.Context) ([]*model.Project, error) 
 	}
 
 	return result, nil
+}
+
+// GitRepositories is the resolver for the gitRepositories field.
+func (r *queryResolver) GitRepositories(ctx context.Context, provider string) ([]*model.GitRepository, error) {
+	userID, err := middelware.GetUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	gitProvider, ok := r.GitProviders[provider]
+	if !ok {
+		return nil, fmt.Errorf("unsupported provider: %s", provider)
+	}
+
+	repositories, err := gitProvider.ListRepositories(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]*model.GitRepository, 0, len(repositories))
+	for _, repo := range repositories {
+		visibility := model.RepositoryVisibilityPublic
+		if repo.Private {
+			visibility = model.RepositoryVisibilityPrivate
+		}
+
+		result = append(result, &model.GitRepository{
+			ID:            repo.ID,
+			Name:          repo.Name,
+			FullName:      repo.FullName,
+			Owner:         repo.Owner,
+			URL:           repo.URL,
+			DefaultBranch: repo.DefaultBranch,
+			UpdatedAt:     repo.UpdatedAt.Format(time.RFC3339),
+			Visibility:    visibility,
+		})
+	}
+
+	return result, nil
+}
+
+// GitBranches is the resolver for the gitBranches field.
+func (r *queryResolver) GitBranches(ctx context.Context, provider string, owner string, repo string) ([]*model.GitBranch, error) {
+	userID, err := middelware.GetUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	gitProvider, ok := r.GitProviders[provider]
+	if !ok {
+		return nil, fmt.Errorf("unsupported provider: %s", provider)
+	}
+
+	branches, err := gitProvider.ListBranches(ctx, userID, owner, repo)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]*model.GitBranch, 0, len(branches))
+
+	for _, branch := range branches {
+		result = append(result, &model.GitBranch{
+			Name:                 branch.Name,
+			UpdatedAt:            branch.UpdatedAt.Format(time.RFC3339),
+			LastCommitAuthorName: branch.LastCommitAuthorName,
+			LastCommitSha:        branch.LastCommitSha,
+		})
+	}
+
+	return result, nil
+}
+
+// GitBranchDeploymentCheck is the resolver for the gitBranchDeploymentCheck field.
+func (r *queryResolver) GitBranchDeploymentCheck(ctx context.Context, provider string, owner string, repo string, branch string) (*model.BranchDeploymentCheck, error) {
+	userID, err := middelware.GetUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	gitProvider, ok := r.GitProviders[provider]
+	if !ok {
+		return nil, fmt.Errorf("unsupported provider: %s", provider)
+	}
+
+	check, err := gitProvider.CheckDeploymentConfig(ctx, userID, owner, repo, branch)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.BranchDeploymentCheck{
+		HasDockerCompose: check.HasDockerCompose,
+		ComposeFilePath:  check.ComposeFilePath,
+	}, nil
 }
 
 // Mutation returns MutationResolver implementation.

@@ -60,20 +60,31 @@ class VerifyStep extends StatelessWidget {
                   status: StepStatusState.success,
                 ),
                 SizedBox(height: AppSpacing.md),
-                StepStatus(
-                  label: "Docker Compose not detected",
-                  status: StepStatusState.error,
-                ),
-                SizedBox(height: AppSpacing.md),
-                StepStatus(
-                  label: "Permissions verified",
-                  status: StepStatusState.success,
-                ),
-                SizedBox(height: AppSpacing.md),
-                StepStatus(
-                  label: "Ready for deployment",
-                  status: StepStatusState.success,
-                ),
+                if (viewModel.isLoading) ...[
+                  StepStatus(
+                    label: "Docker Compose not detected",
+                    status: StepStatusState.loading,
+                  ),
+                  SizedBox(height: AppSpacing.md),
+                  StepStatus(
+                    label: "Ready for deployment",
+                    status: StepStatusState.loading,
+                  ),
+                ] else ...[
+                  StepStatus(
+                    label: "Docker Compose not detected",
+                    status: viewModel.hasDockerCompose
+                        ? StepStatusState.success
+                        : StepStatusState.error,
+                  ),
+                  SizedBox(height: AppSpacing.md),
+                  StepStatus(
+                    label: "Ready for deployment",
+                    status: viewModel.hasDockerCompose
+                        ? StepStatusState.success
+                        : StepStatusState.error,
+                  ),
+                ],
               ],
             ),
           ),

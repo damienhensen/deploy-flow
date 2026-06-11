@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/data_layer/models/git_branch_deployment_check.dart';
+import 'package:mobile/data_layer/models/git_branch_list_item.dart';
+import 'package:mobile/data_layer/models/git_repository_list_item.dart';
 import 'package:mobile/data_layer/repositories/project_repository.dart';
 import 'package:mobile/ui_layer/pages/create_project/widgets/branch_step.dart';
 import 'package:mobile/ui_layer/pages/create_project/widgets/domain_step.dart';
@@ -6,6 +9,7 @@ import 'package:mobile/ui_layer/pages/create_project/widgets/provider_step.dart'
 import 'package:mobile/ui_layer/pages/create_project/widgets/repository_step.dart';
 import 'package:mobile/ui_layer/pages/create_project/widgets/verify_step.dart';
 import 'package:mobile/ui_layer/pages/deployment/deployment_page.dart';
+import 'package:mobile/ui_layer/pages/project_details/project_details_page.dart';
 import 'package:mobile/ui_layer/providers/projects_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -18,6 +22,8 @@ class CreateProjectProvider extends ChangeNotifier {
   bool isLoading = false;
   String? error;
 
+  bool hasDockerCompose = false;
+
   final List<Widget> _steps = [
     RepositoryStep(),
     BranchStep(),
@@ -27,13 +33,13 @@ class CreateProjectProvider extends ChangeNotifier {
   ];
 
   // Local State
-  final List<String> _availableRepositories = ["Portfolio", "FixMyCity"];
-  final List<String> _availableBranches = ["main", "develop", "feat/auth"];
+  List<GitRepositoryListItem> _availableRepositories = [];
+  List<GitBranchListItem> _availableBranches = [];
   final List<String> _availableProviders = ["DigitalOcean"];
   final List<String> _comingProviders = ["TransIP", "AWS", "Hetzner"];
 
-  late String _selectedRepository = _availableRepositories[0];
-  late String _selectedBranch = _availableBranches[0];
+  GitRepositoryListItem? _selectedRepository;
+  GitBranchListItem? _selectedBranch;
   late String _selectedProvider = _availableProviders[0];
   bool _usingCustomDomain = false;
   String _domain = "";
@@ -45,11 +51,11 @@ class CreateProjectProvider extends ChangeNotifier {
   int get currentStep => _currentStep + 1;
   Widget get currentStepWidget => _steps[_currentStep];
 
-  String get selectedRepository => _selectedRepository;
-  List<String> get repositories => _availableRepositories;
+  GitRepositoryListItem? get selectedRepository => _selectedRepository;
+  List<GitRepositoryListItem> get repositories => _availableRepositories;
 
-  String get selectedBranch => _selectedBranch;
-  List<String> get branches => _availableBranches;
+  GitBranchListItem? get selectedBranch => _selectedBranch;
+  List<GitBranchListItem> get branches => _availableBranches;
 
   String get selectedProvider => _selectedProvider;
   Map<String, bool> get providers => {
@@ -62,15 +68,15 @@ class CreateProjectProvider extends ChangeNotifier {
   String get subdomain => _subdomain;
   String get domainPreview => _domain.isNotEmpty
       ? (_subdomain.isNotEmpty ? "$_subdomain.$_domain" : _domain)
-      : "${_selectedRepository.toLowerCase()}-xyz.deployflow.app";
+      : "${_selectedRepository?.name.toLowerCase()}-xyz.deployflow.app";
 
   // Setters
-  void setRepository(String repository) {
+  void setRepository(GitRepositoryListItem repository) {
     _selectedRepository = repository;
     notifyListeners();
   }
 
-  void setBranch(String branch) {
+  void setBranch(GitBranchListItem branch) {
     _selectedBranch = branch;
     notifyListeners();
   }
@@ -104,11 +110,19 @@ class CreateProjectProvider extends ChangeNotifier {
         // Reload projects
         context.read<ProjectsProvider>().loadProjects();
 
-        // Navigate to deployment page
-        await Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const DeploymentPage()),
-        );
+        if (hasDockerCompose) {
+          // Navigate to deployment page
+          await Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const DeploymentPage()),
+          );
+        } else {
+          // Navigate to project page
+          await Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const ProjectDetailsPage()),
+          );
+        }
 
         // Reset state
         _currentStep = 0;
@@ -125,6 +139,14 @@ class CreateProjectProvider extends ChangeNotifier {
       return;
     }
 
+    if (_currentStep == 0) {
+      loadBranches();
+    }
+
+    if (currentStep == totalSteps - 1) {
+      deploymentCheck();
+    }
+
     _currentStep += 1;
     notifyListeners();
   }
@@ -136,6 +158,72 @@ class CreateProjectProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Load data
+  Future<void> loadRepositories() async {
+    isLoading = true;
+    error = null;
+    notifyListeners();
+
+    try {
+      _availableRepositories = await repository.getRepositories();
+      _selectedRepository = _availableRepositories[0];
+    } catch (e) {
+      error = e.toString();
+    } finally {
+      isLoading = false;
+    }
+
+    notifyListeners();
+  }
+
+  Future<void> loadBranches() async {
+    isLoading = true;
+    error = null;
+    notifyListeners();
+
+    try {
+      if (_selectedRepository == null) return;
+
+      _availableBranches = await repository.getBranches(
+        _selectedRepository!.owner,
+        _selectedRepository!.name,
+      );
+      _selectedBranch = _availableBranches[0];
+    } catch (e) {
+      error = e.toString();
+    } finally {
+      isLoading = false;
+    }
+
+    notifyListeners();
+  }
+
+  Future<void> deploymentCheck() async {
+    isLoading = true;
+    error = null;
+    hasDockerCompose = false;
+    notifyListeners();
+
+    try {
+      if (_selectedRepository == null) return;
+      if (_selectedBranch == null) return;
+
+      GitBranchDeploymentCheck check = await repository.deploymentCheck(
+        _selectedRepository!.owner,
+        _selectedRepository!.name,
+        _selectedBranch!.name,
+      );
+
+      hasDockerCompose = check.hasDockerCompose;
+    } catch (e) {
+      error = e.toString();
+    } finally {
+      isLoading = false;
+    }
+
+    notifyListeners();
+  }
+
   // Create project / Start deployment
   Future<bool> createProject() async {
     isLoading = true;
@@ -144,8 +232,9 @@ class CreateProjectProvider extends ChangeNotifier {
 
     try {
       await repository.createProject(
-        _selectedRepository,
-        _selectedBranch,
+        _selectedRepository!.name,
+        _selectedRepository!.url,
+        _selectedBranch!.name,
         _selectedProvider,
         _domain,
         _subdomain,
@@ -153,7 +242,6 @@ class CreateProjectProvider extends ChangeNotifier {
       return true;
     } catch (e) {
       error = e.toString();
-      debugPrint(e.toString());
       return false;
     } finally {
       isLoading = false;

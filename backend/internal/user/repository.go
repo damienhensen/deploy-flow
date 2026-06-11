@@ -183,3 +183,19 @@ func (r *Repository) findUserByID(userID int64) (User, error) {
 
 	return user, err
 }
+
+func (r *Repository) GetAccessToken(
+	userID int64,
+	provider string,
+) (string, error) {
+	var accessToken string
+
+	err := r.DB.Get(&accessToken, `
+		SELECT access_token
+		FROM connected_accounts
+		WHERE user_id = ?
+		AND provider = ?
+	`, userID, provider)
+
+	return accessToken, err
+}

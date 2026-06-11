@@ -4,8 +4,22 @@ import 'package:mobile/ui_layer/theme/app_colors.dart';
 import 'package:mobile/ui_layer/theme/app_spacing.dart';
 import 'package:provider/provider.dart';
 
-class CreateProjectPage extends StatelessWidget {
+class CreateProjectPage extends StatefulWidget {
   const CreateProjectPage({super.key});
+
+  @override
+  State<StatefulWidget> createState() => _CreateProjectPageState();
+}
+
+class _CreateProjectPageState extends State<CreateProjectPage> {
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CreateProjectProvider>().loadRepositories();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

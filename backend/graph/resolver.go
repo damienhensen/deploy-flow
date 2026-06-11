@@ -1,6 +1,9 @@
 package graph
 
-import "github.com/damienhensen/deploy-flow/backend/internal/project"
+import (
+	"github.com/damienhensen/deploy-flow/backend/internal/gitprovider"
+	"github.com/damienhensen/deploy-flow/backend/internal/project"
+)
 
 // This file will not be regenerated automatically.
 //
@@ -9,4 +12,5 @@ import "github.com/damienhensen/deploy-flow/backend/internal/project"
 
 type Resolver struct {
 	ProjectService *project.Service
+	GitProviders   map[string]gitprovider.Provider
 }
